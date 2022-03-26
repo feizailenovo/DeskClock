@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.feizai.deskclock">
 
+<!--    <original-package>标签用以设置应用 源码包名，即Java文件所在的源码程序包层次，android工程中真实的源代码层次结构。-->
+    <original-package android:name="com.feizai.deskclock" />
+
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SET_TIME" />
     <uses-permission android:name="android.permission.SET_TIME_ZONE" />
@@ -14,6 +17,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DeskClock">
+
+<!--        闹钟数据库-->
+        <provider
+            android:name=".provider.AlarmProvider"
+            android:authorities="com.feizai.deskclock"
+            android:exported="true" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -23,6 +33,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+<!--        闹钟初始化广播-->
         <receiver android:name=".receiver.AlarmInitReceiver"
             android:exported="true">
             <intent-filter>
@@ -32,6 +44,7 @@
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
         </receiver>
+
     </application>
 
 </manifest>
