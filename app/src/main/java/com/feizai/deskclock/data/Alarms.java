@@ -498,7 +498,7 @@ public class Alarms {
         saveNextAlarm(context, "");
     }
 
-    static void saveSnoozeAlert(final Context context, final int id,
+    public static void saveSnoozeAlert(final Context context, final int id,
                                 final long time) {
         SharedPreferences prefs = context.getSharedPreferences(PREFERENCES, 0);
         if (id == -1) {
