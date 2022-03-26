@@ -100,6 +100,10 @@ public final class DaysOfWeek {
         return mDays;
     }
 
+    public void setOnlyOne() {
+        mDays = 0x00;
+    }
+
     // Returns days of week encoded in an array of booleans.
     public boolean[] getBooleanArray() {
         boolean[] ret = new boolean[7];

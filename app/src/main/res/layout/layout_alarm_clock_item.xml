@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="@dimen/dp_5"
+    android:layout_margin="@dimen/dp_2"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:id="@+id/alarm_item_layout"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:paddingLeft="@dimen/dp_10"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/top"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:minHeight="40dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12:00"
+                android:textColor="@color/black"
+                android:textSize="@dimen/sp_20"
+                android:id="@+id/alarm_time" />
+
+            <TextView
+                android:minHeight="30dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="label"
+                android:layout_marginLeft="@dimen/dp_5"
+                android:textColor="#2F4F4F"
+                android:textSize="@dimen/sp_14"
+                android:id="@+id/alarm_label" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="@dimen/dp_5"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/alarm_times"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="周六"
+                android:textSize="@dimen/sp_12" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/alarm_switch_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <Switch
+            android:clickable="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:switchMinWidth="@dimen/dp_40"
+            android:track="@drawable/switch_track"
+            android:thumb="@drawable/switch_thumb"
+            android:id="@+id/alarm_switch" />
+    </LinearLayout>
+
+</LinearLayout>

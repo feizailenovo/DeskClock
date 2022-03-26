@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="OptionLayout">
+        <attr name="option_title_text" format="string" />
+        <attr name="option_result_text" format="string" />
+        <attr name="option_result_hint" format="string" />
+        <attr name="option_img_src" format="reference|color" />
+        <attr name="option_img_rotation" format="integer" />
+        <attr name="option_title_textSize" format="dimension" />
+        <attr name="option_result_textSize" format="dimension" />
+        <attr name="option_title_textColor" format="reference|color" />
+        <attr name="option_result_textColor" format="reference|color" />
+    </declare-styleable>
+    <declare-styleable name="OptionSwitchLayout">
+        <attr name="option_switch_title_text" format="string" />
+        <attr name="option_switch_title_textSize" format="dimension" />
+        <attr name="option_switch_title_textColor" format="reference|color" />
+        <attr name="option_switch_value" format="boolean" />
+    </declare-styleable>
+</resources>

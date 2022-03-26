@@ -1,5 +1,6 @@
 package com.feizai.deskclock.data;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -7,6 +8,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.provider.BaseColumns;
 
+import com.feizai.deskclock.R;
 import com.feizai.deskclock.util.LogUtil;
 
 import java.util.Calendar;
@@ -239,5 +241,20 @@ public final class Alarm implements Parcelable {
             return "";
         }
         return label;
+    }
+
+    public String toString(Context context) {
+        return "Alarm{" +
+                "id=" + id +
+                ", enabled=" + enabled +
+                ", hour=" + hour +
+                ", minutes=" + minutes +
+                ", daysOfWeek=" + daysOfWeek.toString(context, R.array.week) +
+                ", time=" + time +
+                ", vibrate=" + vibrate +
+                ", label='" + label + '\'' +
+                ", alert=" + alert +
+                ", silent=" + silent +
+                '}';
     }
 }

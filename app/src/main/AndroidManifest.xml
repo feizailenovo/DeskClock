@@ -40,6 +40,11 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".activity.AlarmClockEditActivity"
+            android:exported="true">
+
+        </activity>
+
         <!--        闹钟响铃时的弹框（全屏）-->
         <activity
             android:name=".activity.AlarmAlertFullScreen"
@@ -47,8 +52,7 @@
             android:excludeFromRecents="true"
             android:exported="true"
             android:launchMode="singleInstance"
-            android:taskAffinity=""
-            android:theme="@android:style/Theme.Wallpaper.NoTitleBar" />
+            android:taskAffinity="" />
 
         <!--        闹钟响铃时的弹框-->
         <activity

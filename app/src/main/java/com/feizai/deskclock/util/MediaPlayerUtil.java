@@ -22,6 +22,9 @@ public class MediaPlayerUtil {
     private String mFileName;
     private Uri mUri;
     private volatile Boolean isPrepared;
+    private Boolean isLoop;
+
+    private static MediaPlayerUtil instance;
 
     private MediaPlayerUtil() {
         if (mMediaPlayer == null) {
@@ -52,20 +55,20 @@ public class MediaPlayerUtil {
         }
     }
 
-    public static MediaPlayerUtil getInstance(Context context) {
-        if (context != null) {
-            mContext = context;
-        } else {
-            throw new NullPointerException("context is null");
+    public static synchronized MediaPlayerUtil getInstance(@NonNull Context context) {
+        mContext = context;
+        if (instance == null) {
+            instance = new MediaPlayerUtil();
         }
-        return MediaPlayerUtilHolder.sInstance;
+        return instance;
+//        return MediaPlayerUtilHolder.sInstance;
     }
 
-    private static class MediaPlayerUtilHolder {
-        private static final MediaPlayerUtil sInstance = new MediaPlayerUtil();
-    }
+//    private static class MediaPlayerUtilHolder {
+//        private static final MediaPlayerUtil sInstance = new MediaPlayerUtil();
+//    }
 
-    public MediaPlayerUtil setDataSource(String fileName) {
+    public MediaPlayerUtil setDataSource(String fileName, boolean isLoop) {
         if (mMediaPlayer == null) {
             LogUtil.i("MediaPlayer is null");
         } else {
@@ -84,6 +87,10 @@ public class MediaPlayerUtil {
                         AssetFileDescriptor assetFileDescriptor = mContext.getResources().getAssets().openFd(fileName);
                         mMediaPlayer.setDataSource(assetFileDescriptor.getFileDescriptor(), assetFileDescriptor.getStartOffset(), assetFileDescriptor.getLength());
                     }
+                    if (isLoop) {
+                        mMediaPlayer.setLooping(true);
+                    }
+                    this.isLoop = isLoop;
                     mMediaPlayer.prepare();
                 }
             } catch (IOException e) {
@@ -95,7 +102,7 @@ public class MediaPlayerUtil {
         return this;
     }
 
-    public MediaPlayerUtil setDataSource(@NonNull Uri uri) {
+    public MediaPlayerUtil setDataSource(@NonNull Uri uri, boolean isLoop) {
         if (mMediaPlayer == null) {
             LogUtil.i("MediaPlayer is null");
         } else {
@@ -107,6 +114,10 @@ public class MediaPlayerUtil {
                 mFileName = "";
                 mUri = uri;
                 mMediaPlayer.setDataSource(mContext,uri);
+                if (isLoop) {
+                    mMediaPlayer.setLooping(true);
+                }
+                this.isLoop = isLoop;
                 mMediaPlayer.prepare();
             } catch (IOException e) {
                 LogUtil.e("Resource loading failed.");
@@ -126,9 +137,9 @@ public class MediaPlayerUtil {
             }
             if (!isPrepared){
                 if (!TextUtils.isEmpty(mFileName)) {
-                    setDataSource(mFileName);
+                    setDataSource(mFileName, isLoop);
                 } else if (mUri != null) {
-                    setDataSource(mUri);
+                    setDataSource(mUri, isLoop);
                 }
             }
             mMediaPlayer.start();
@@ -164,6 +175,7 @@ public class MediaPlayerUtil {
             LogUtil.i("MediaPlayer is null");
         } else {
             mMediaPlayer.setLooping(value);
+            isLoop = value;
         }
     }
 
@@ -193,6 +205,7 @@ public class MediaPlayerUtil {
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
+        instance = null;
         LogUtil.i("MediaPlayer release complete.");
     }
 

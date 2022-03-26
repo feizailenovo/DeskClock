@@ -67,7 +67,7 @@ public class AlarmAlert extends AlarmAlertFullScreen {
 
     @Override
     public void onBackPressed() {
-        finish();
+        return;
     }
 
     private boolean checkRetryCount() {

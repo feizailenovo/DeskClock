@@ -34,7 +34,7 @@ public class AlarmService extends Service {
      * Play alarm up to 10 minutes before silencing
      * 在静音前 10 分钟播放警报
      */
-    private static final int ALARM_TIMEOUT_SECONDS = 10 * 60;
+    private static final int ALARM_TIMEOUT_SECONDS = 2 * 60;
 
     private static final long[] sVibratePattern = new long[]{500, 500};
 
@@ -233,9 +233,9 @@ public class AlarmService extends Service {
                 if (mTelephonyManager.getCallState() != TelephonyManager.CALL_STATE_IDLE) {
                     LogUtil.v("Using the in-call alarm");
                     mMediaPlayerUtil.setVolume(IN_CALL_VOLUME, IN_CALL_VOLUME);
-                    mMediaPlayerUtil.setDataSource("in_call_alarm.ogg");
+                    mMediaPlayerUtil.setDataSource("in_call_alarm.ogg",true);
                 } else {
-                    mMediaPlayerUtil.setDataSource(alert);
+                    mMediaPlayerUtil.setDataSource(alert,true);
                 }
                 startAlarm();
             } catch (Exception e) {
@@ -246,7 +246,7 @@ public class AlarmService extends Service {
                  * 铃声可能在 SD 卡上，现在可能很忙。 使用后备铃声。
                  */
                 try {
-                    mMediaPlayerUtil.setDataSource("fallbackring.ogg");
+                    mMediaPlayerUtil.setDataSource("fallbackring.ogg",true);
                     startAlarm();
                 } catch (Exception e1) {
                     e.printStackTrace();
@@ -284,7 +284,7 @@ public class AlarmService extends Service {
         if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0) {
             if (mMediaPlayerUtil != null) {
                 mMediaPlayerUtil.setAudioStreamType(AudioManager.STREAM_ALARM);
-                mMediaPlayerUtil.setLoop(true);
+//                mMediaPlayerUtil.setLoop(true);
                 mMediaPlayerUtil.play();
             } else {
                 LogUtil.v("MediaPlayerUtil is null");
@@ -307,20 +307,19 @@ public class AlarmService extends Service {
             sendBroadcast(alarmDone);
 
             /**
-             * Stop audio playing
-             * 停止闹铃播放
-             */
-            if (mMediaPlayerUtil != null) {
-                mMediaPlayerUtil.stop();
-                mMediaPlayerUtil.release();
-                mMediaPlayerUtil = null;
-            }
-
-            /**
              * Stop vibrator
              * 停止振动器
              */
             mVibrator.cancel();
+        }
+        /**
+         * Stop audio playing
+         * 停止闹铃播放
+         */
+        if (mMediaPlayerUtil != null) {
+            mMediaPlayerUtil.stop();
+            mMediaPlayerUtil.release();
+            mMediaPlayerUtil = null;
         }
         disableKiller();
     }

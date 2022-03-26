@@ -13,4 +13,11 @@
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <style name="Theme.picker" parent="android:Theme.Holo.Light">
+        <item name="android:editTextStyle">@style/Widget.EditText.Size</item>
+    </style>
+    <style name="Widget.EditText.Size" parent="@android:style/Widget.EditText">
+        <item name="android:textSize">@dimen/sp_20</item>
+    </style>
 </resources>
