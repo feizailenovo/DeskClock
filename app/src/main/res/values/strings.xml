@@ -1,7 +1,10 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">DeskClock</string>
+    <string name="alarm">alarm</string>
     <string name="every_day">every day</string>
     <string name="never">never</string>
     <string name="day_concat">,</string>
     <string name="silent_alarm_summary">silent</string>
+    <string name="alarm_alert_alert_silenced">The alarm time is <xliff:g id="MINUTES">%d</xliff:g> minutes</string>
+    <string name="alarm_notify_text">Choose to snooze or dismiss this alarm.</string>
 </resources>

@@ -518,7 +518,7 @@ public class Alarms {
      * Disable the snooze alert if the given id matches the snooze id.
      * 如果给定的id与贪睡id匹配，则禁用贪睡警报。
      */
-    static void disableSnoozeAlert(final Context context, final int id) {
+    public static void disableSnoozeAlert(final Context context, final int id) {
         SharedPreferences prefs = context.getSharedPreferences(PREFERENCES, 0);
         int snoozeId = prefs.getInt(PREF_SNOOZE_ID, -1);
         if (snoozeId == -1) {
