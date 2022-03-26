@@ -12,7 +12,7 @@ import com.feizai.deskclock.R;
 /**
  * Author: chenhao
  * Date: 2022年3月26日 0026 下午 12:46:45
- * Describe:
+ * Describe: 闹钟铃声Preference，用于设置闹钟铃声
  */
 public class AlarmRingtonePreference extends RingtonePreference {
     private Uri mAlert;
