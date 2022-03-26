@@ -22,6 +22,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        myCreate();
         setContentView(mLayoutRes);
         findView();
     }
@@ -35,6 +36,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected abstract void findView();
 
     protected abstract void initData();
+
+    protected void myCreate(){}
 
     protected void startActivity(@Nullable Class activityClass) {
         startActivity(new Intent(this, activityClass));

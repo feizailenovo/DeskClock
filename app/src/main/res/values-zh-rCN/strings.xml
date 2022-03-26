@@ -7,4 +7,8 @@
     <string name="silent_alarm_summary">静音</string>
     <string name="alarm_alert_alert_silenced">闹钟响铃时间为 <xliff:g id="MINUTES">%d</xliff:g> 分钟</string>
     <string name="alarm_notify_text">选择暂停或关闭此闹钟。</string>
+    <string name="snooze">睡眠</string>
+    <string name="cancel">关闭</string>
+    <string name="alarm_notify_snooze_text">闹钟已暂停，<xliff:g id="TIME">%d</xliff:g> 分钟后再响铃。点击可取消。"</string>
+    <string name="alarm_toast_snooze_text">闹钟已暂停 <xliff:g id="TIME">%d</xliff:g> 分钟。"</string>
 </resources>

@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.feizai.deskclock">
 
-<!--    <original-package>标签用以设置应用 源码包名，即Java文件所在的源码程序包层次，android工程中真实的源代码层次结构。-->
+    <!--    <original-package>标签用以设置应用 源码包名，即Java文件所在的源码程序包层次，android工程中真实的源代码层次结构。-->
     <original-package android:name="com.feizai.deskclock" />
 
     <uses-permission android:name="android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS" />
@@ -20,7 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DeskClock">
 
-<!--        闹钟数据库-->
+        <!--        闹钟数据库-->
         <provider
             android:name=".provider.AlarmProvider"
             android:authorities="com.feizai.deskclock"
@@ -36,8 +36,28 @@
             </intent-filter>
         </activity>
 
-<!--        闹钟初始化广播-->
-        <receiver android:name=".receiver.AlarmInitReceiver"
+        <!--        闹钟响铃时的弹框（全屏）-->
+        <activity
+            android:name=".activity.AlarmAlertFullScreen"
+            android:configChanges="orientation|keyboardHidden|keyboard|navigation"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Wallpaper.NoTitleBar" />
+
+        <!--        闹钟响铃时的弹框-->
+        <activity
+            android:name=".activity.AlarmAlert"
+            android:configChanges="orientation|keyboardHidden|keyboard|navigation"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity="" />
+
+        <!--        闹钟初始化广播-->
+        <receiver
+            android:name=".receiver.AlarmInitReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -47,7 +67,9 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".receiver.AlarmReceiver"
+        <!--        闹钟action处理广播接收器-->
+        <receiver
+            android:name=".receiver.AlarmReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.feizai.deskclock.ALARM_ALERT" />
