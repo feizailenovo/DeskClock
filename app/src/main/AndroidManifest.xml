@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.SET_TIME_ZONE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.DEVICE_POWER" />
 
     <application
         android:allowBackup="true"
@@ -77,6 +81,24 @@
                 <action android:name="cancel_snooze" />
             </intent-filter>
         </receiver>
+
+        <!-- This service receives the same intent as AlarmReceiver but it does
+             not respond to the same broadcast. The AlarmReceiver will receive
+             the alert broadcast and will start this service with the same
+             intent. The service plays the alarm alert and vibrates the device.
+             This allows the alert to continue playing even if another activity
+             causes the AlarmAlert activity to pause.
+
+             此服务接收与 AlarmReceiver 相同的意图，但确实如此不响应同一广播。 AlarmReceiver 将接收
+             警报广播并将以相同的方式启动此服务意图。 该服务会播放警报警报并振动设备。
+             这允许警报继续播放，即使另一个活动导致 AlarmAlert 活动暂停。-->
+        <service
+            android:name=".AlarmService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.feizai.deskclock.ALARM_ALERT" />
+            </intent-filter>
+        </service>
 
     </application>
 
