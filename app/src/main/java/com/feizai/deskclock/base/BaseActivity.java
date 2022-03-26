@@ -1,4 +1,4 @@
-package com.feizai.deskclock;
+package com.feizai.deskclock.base;
 
 import android.content.Intent;
 import android.os.Bundle;
