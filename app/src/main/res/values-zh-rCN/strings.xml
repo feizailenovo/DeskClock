@@ -3,4 +3,5 @@
     <string name="every_day">每天</string>
     <string name="never">从不</string>
     <string name="day_concat">,</string>
+    <string name="silent_alarm_summary">"静音"</string>
 </resources>
