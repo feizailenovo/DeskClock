@@ -53,7 +53,7 @@ public class MainActivity extends BaseActivity {
             startActivity(intent, AlarmClockEditActivity.class);
         });
         alarmClockAdapter.setOnItemChildClickListener((v, position) -> {
-            Switch alarm_switch = findViewById(R.id.alarm_switch);
+            Switch alarm_switch = v.findViewById(R.id.alarm_switch);
             alarm_switch.setChecked(!alarm_switch.isChecked());
             Alarms.enableAlarm(MainActivity.this, alarmList.get(position).id, alarm_switch.isChecked());
             Alarms.setNextAlert(MainActivity.this);
