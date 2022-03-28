@@ -472,7 +472,7 @@ public class Alarms {
             am.set(AlarmManager.RTC_WAKEUP, atTimeInMillis, sender);
         }
 
-        AlarmManager.AlarmClockInfo nextAlarmClock = am.getNextAlarmClock();
+//        AlarmManager.AlarmClockInfo nextAlarmClock = am.getNextAlarmClock();
         setStatusBarIcon(context, true);
 
         Calendar c = Calendar.getInstance();
@@ -594,7 +594,10 @@ public class Alarms {
      */
     private static void setStatusBarIcon(Context context, boolean enabled) {
         Intent alarmChanged = new Intent("android.intent.action.ALARM_CHANGED");
+//        alarmChanged.setAction();
+//        alarmChanged.setAction(Intent.ACTION_ALARM_CHANGED);
         alarmChanged.putExtra("alarmSet", enabled);
+//        alarmChanged.setPackage(PACKAGE_NAME);
         context.sendBroadcast(alarmChanged);
     }
 
