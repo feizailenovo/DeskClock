@@ -199,7 +199,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
         NotificationManager manager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(String.valueOf(alarm.id), APP_NAME, NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationChannel channel = new NotificationChannel(String.valueOf(alarm.id), APP_NAME, NotificationManager.IMPORTANCE_HIGH);
             manager.createNotificationChannel(channel);
         }
         Notification notification = new NotificationCompat.Builder(context, String.valueOf(alarm.id))
