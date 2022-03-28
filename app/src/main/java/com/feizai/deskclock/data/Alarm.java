@@ -7,10 +7,12 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.provider.BaseColumns;
+import android.text.format.DateFormat;
 
 import com.feizai.deskclock.R;
 import com.feizai.deskclock.util.LogUtil;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 /**
@@ -256,5 +258,17 @@ public final class Alarm implements Parcelable {
                 ", alert=" + alert +
                 ", silent=" + silent +
                 '}';
+    }
+
+    public String getAlarmTime(Context context) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minutes);
+        calendar.set(Calendar.SECOND, 0);
+        if (DateFormat.is24HourFormat(context)) {
+            return new SimpleDateFormat("HH:mm").format(calendar.getTime());
+        } else {
+            return new SimpleDateFormat("a hh:mm").format(calendar.getTime());
+        }
     }
 }
