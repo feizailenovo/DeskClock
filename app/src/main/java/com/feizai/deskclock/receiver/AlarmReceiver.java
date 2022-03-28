@@ -11,6 +11,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Parcel;
 import android.util.Log;
 
@@ -178,6 +179,15 @@ public class AlarmReceiver extends BroadcastReceiver {
          */
         String label = alarm.getLabelOrDefault();
 
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            LogUtil.v("Android O prohibits background popups");
+//            Intent playAlarmActivity = new Intent(context, alertActivityClass);
+//            playAlarmActivity.putExtra(Alarms.ALARM_INTENT_EXTRA, alarm);
+//            playAlarmActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+//                    | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+//            context.startActivity(playAlarmActivity);
+//        }
+
         /**
          * NEW: Embed the full-screen UI here. The notification manager will
          * take care of displaying it if it's OK to do so.
@@ -193,7 +203,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             manager.createNotificationChannel(channel);
         }
         Notification notification = new NotificationCompat.Builder(context, String.valueOf(alarm.id))
-                .setContentTitle(context.getString(R.string.alarm))
+                .setContentTitle(context.getString(R.string.alarm_notify_title, alarm.getAlarmTime(context)))
                 .setContentText(context.getString(R.string.alarm_notify_text))
                 .setWhen(alarm.time)
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -233,7 +243,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             manager.createNotificationChannel(channel);
         }
         Notification notification = new NotificationCompat.Builder(context, String.valueOf(alarm.id))
-                .setContentTitle(context.getString(R.string.alarm))
+                .setContentTitle(context.getString(R.string.alarm_notify_title, alarm.getAlarmTime(context)))
                 .setContentText(context.getString(R.string.alarm_alert_alert_silenced, timeout))
                 .setWhen(alarm.time)
                 .setSmallIcon(R.mipmap.ic_launcher)

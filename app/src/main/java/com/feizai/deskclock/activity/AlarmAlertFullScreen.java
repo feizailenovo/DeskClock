@@ -44,8 +44,7 @@ public class AlarmAlertFullScreen extends BaseActivity {
 
     private static final String PACKAGE_NAME = "com.feizai.deskclock";
     private static final String APP_NAME = "DeskClock";
-    private int SNOOZE_TIME_IN_MINUTES = 5;
-    private static final long SECOND = 1000 * 60;
+    private int SNOOZE_TIME_IN_MILLIS = 1000 * 60 * 5;
 
     public AlarmAlertFullScreen() {
         super(R.layout.layout_alarm_alert);
@@ -133,7 +132,7 @@ public class AlarmAlertFullScreen extends BaseActivity {
             dismiss(false);
             return;
         }
-        final long snoozeTime = System.currentTimeMillis() + SNOOZE_TIME_IN_MINUTES * SECOND;
+        final long snoozeTime = System.currentTimeMillis() + SNOOZE_TIME_IN_MILLIS;
         /**
          * Get the display time for the snooze and update the notification.
          * 获取睡眠的显示时间并更新通知。
@@ -158,8 +157,8 @@ public class AlarmAlertFullScreen extends BaseActivity {
             manager.createNotificationChannel(channel);
         }
         Notification notification = new NotificationCompat.Builder(this, String.valueOf(mAlarm.id))
-                .setContentTitle(getString(R.string.alarm))
-                .setContentText(getString(R.string.alarm_notify_snooze_text, SNOOZE_TIME_IN_MINUTES))
+                .setContentTitle(getString(R.string.alarm_notify_title, mAlarm.getAlarmTime(this)))
+                .setContentText(getString(R.string.alarm_notify_snooze_text, (SNOOZE_TIME_IN_MILLIS / 1000 / 60)))
                 .setWhen(mAlarm.time)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
@@ -173,7 +172,7 @@ public class AlarmAlertFullScreen extends BaseActivity {
          * Display the snooze minutes in a toast.
          * 在Toast中显示闹钟睡眠分钟数
          */
-        Toast.makeText(this, getString(R.string.alarm_toast_snooze_text, SNOOZE_TIME_IN_MINUTES), Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getString(R.string.alarm_toast_snooze_text, (SNOOZE_TIME_IN_MILLIS / 1000 / 60)), Toast.LENGTH_LONG).show();
         Intent stopAlarm = new Intent();
         stopAlarm.setAction(Alarms.ALARM_ALERT_ACTION);
         stopAlarm.setPackage(PACKAGE_NAME);
