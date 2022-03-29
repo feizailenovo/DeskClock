@@ -136,11 +136,13 @@ public class Alarms {
      * 创建一个新的Alarm并填写给定的Alarm的id。
      */
     public static long addAlarm(Context context, Alarm alarm) {
+        long timeInMillis = calculateAlarm(alarm);
+        alarm.time = timeInMillis;
+
         ContentValues values = createContentValues(alarm);
         Uri uri = context.getContentResolver().insert(Alarm.Columns.CONTENT_URI, values);
         alarm.id = (int) ContentUris.parseId(uri);
 
-        long timeInMillis = calculateAlarm(alarm);
         if (alarm.enabled) {
             clearSnoozeIfNeeded(context, timeInMillis);
         }
