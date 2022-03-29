@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
@@ -67,7 +68,6 @@ public class AlarmClockEditActivity extends BaseActivity {
         mToast = ToastUtil.getInstance(this);
         Intent intent = getIntent();
         mId = intent.getIntExtra(Alarms.ALARM_ID, -1);
-        Log.d("chenhao", "In AlarmClockEditActivity, alarm id = " + mId);
         mAlarm = null;
         if (mId == -1) {
             mAlarm = new Alarm();
@@ -112,9 +112,8 @@ public class AlarmClockEditActivity extends BaseActivity {
             mAlarm.enabled = true;
             mAlarm.time = 0;
 //            mAlarm.time = calendar.getTimeInMillis();
-            Log.d("chenhao", "aa" + mAlarm.toString(this));
             long l = saveAlarm();
-            mToast.showToast("将在" + ToolUtil.timestampToString(l - System.currentTimeMillis()) + "后响铃");
+            showToast("将在" + ToolUtil.timestampToString(l - System.currentTimeMillis()) + "后响铃");
             finish();
         });
         mRemark.setOnClickListener(v -> {
@@ -122,7 +121,6 @@ public class AlarmClockEditActivity extends BaseActivity {
             DialogInputExtKt.input(dialog, "添加备注", 0, "",
                     0, 0, 10,
                     true, true, (materialDialog, charSequence) -> {
-                        Log.d("chenhaoedit", charSequence.toString());
                         mAlarm.label = charSequence.toString();
                         updateData(mAlarm);
                         return null;
@@ -168,7 +166,7 @@ public class AlarmClockEditActivity extends BaseActivity {
             dialog.message(0, "确定删除此闹钟？", dialogMessageSettings -> null);
             dialog.positiveButton(0, "确定", materialDialog -> {
                 Alarms.deleteAlarm(AlarmClockEditActivity.this, mId);
-                mToast.showToast("已删除闹钟");
+                showToast("已删除闹钟");
                 finish();
                 return null;
             });
@@ -201,6 +199,10 @@ public class AlarmClockEditActivity extends BaseActivity {
             time = Alarms.setAlarm(this, mAlarm);
         }
         return time;
+    }
+
+    public void showToast(CharSequence content) {
+        Toast.makeText(this, content, Toast.LENGTH_SHORT).show();
     }
 
 }

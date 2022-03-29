@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.widget.LinearLayout;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.feizai.deskclock.activity.AlarmClockEditActivity;
 import com.feizai.deskclock.adapter.AlarmClockAdapter;
@@ -59,9 +60,9 @@ public class MainActivity extends BaseActivity {
             Alarms.setNextAlert(MainActivity.this);
             long l = Alarms.calculateAlarm(alarmList.get(position));
             if (alarm_switch.isChecked()) {
-                toastUtil.showToast("将在" + ToolUtil.timestampToString(l - System.currentTimeMillis()) + "后响铃");
+                showToast("将在" + ToolUtil.timestampToString(l - System.currentTimeMillis()) + "后响铃");
             }else {
-                toastUtil.showToast("闹钟已关闭");
+                showToast("闹钟已关闭");
             }
 //            Alarm alarm = Alarms.calculateNextAlert(getContext());
 //            if (alarm != null) {
@@ -89,7 +90,12 @@ public class MainActivity extends BaseActivity {
                 final Alarm alarm = new Alarm(cursor);
                 list.add(alarm);
             }
+            cursor.close();
         }
         return list;
+    }
+
+    public void showToast(CharSequence content) {
+        Toast.makeText(this, content, Toast.LENGTH_SHORT).show();
     }
 }
