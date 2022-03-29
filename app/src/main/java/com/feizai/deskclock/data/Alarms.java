@@ -193,7 +193,7 @@ public class Alarms {
      */
     private static Cursor getFilteredAlarmsCursor(ContentResolver contentResolver) {
         return contentResolver.query(Alarm.Columns.CONTENT_URI,
-                Alarm.Columns.ALARM_QUERY_COLUMNS, Alarm.Columns.WHERE_ENABLED,
+                Alarm.Columns.ALARM_QUERY_COLUMNS, "",
                 null, null);
     }
 
@@ -274,6 +274,8 @@ public class Alarms {
         resolver.update(
                 ContentUris.withAppendedId(Alarm.Columns.CONTENT_URI, alarm.id),
                 values, null, null);
+
+        LogUtil.d("setAlarm " + alarm.toString(context));
 
         long timeInMillis = calculateAlarm(alarm);
 
@@ -363,31 +365,35 @@ public class Alarms {
             if (cursor.moveToFirst()) {
                 do {
                     Alarm a = new Alarm(cursor);
-                    LogUtil.d(a.toString(context));
+                    LogUtil.d("calculateNextAlert " + a.toString(context));
                     /**
                      * A time of 0 indicates this is a repeating alarm, so
                      * calculate the time to get the next alert.
                      * 时间为O表示这是一个重复的警报，因此计算获得下一个警报的时间。
                      */
-                    if (a.time == 0 && a.enabled) {
-                        a.time = calculateAlarm(a);
+                    // Expired alarm, disable it and move along.
+                    // 警报器过期了，解除警报，然后离开。
+                    if (a.enabled) {
+                        if (a.daysOfWeek.isRepeatSet()) {
+                            a.time = calculateAlarm(a);
+                        }
                     }
                     if (a.time < now) {
                         LogUtil.v("Disabling expired alarm set for ");
                         // Expired alarm, disable it and move along.
                         // 警报器过期了，解除警报，然后离开。
                         enableAlarmInternal(context, a, false);
-//                        continue;
-                    }
-                    if (a.time < minTime) {
-                        alarms.clear();
-                        minTime = a.time;
-                        saveAtTheSameTimeAlarm(context, a.id, minTime);
-                        alarm = a;
-                        alarms.add(a);
-                    } else if (a.time == minTime) {
-                        saveAtTheSameTimeAlarm(context, a.id, minTime);
-                        alarms.add(a);
+                    }else {
+                        if (a.time < minTime) {
+                            alarms.clear();
+                            minTime = a.time;
+                            saveAtTheSameTimeAlarm(context, a.id, minTime);
+                            alarm = a;
+                            alarms.add(a);
+                        } else if (a.time == minTime) {
+                            saveAtTheSameTimeAlarm(context, a.id, minTime);
+                            alarms.add(a);
+                        }
                     }
                 } while (cursor.moveToNext());
             }
@@ -523,6 +529,13 @@ public class Alarms {
 
     public static void saveSnoozeAlert(final Context context, final int id,
                                        final long time) {
+        if (id != -1) {
+            Alarm alarm = getAlarm(context.getContentResolver(), id);
+            if (alarm != null) {
+                alarm.time = time;
+                setAlarm(context, alarm);
+            }
+        }
         SharedPreferences prefs = context.getSharedPreferences(PREFERENCES, 0);
         if (id == -1) {
             clearSnoozePreference(context, prefs);
@@ -534,7 +547,7 @@ public class Alarms {
         }
         // Set the next alert after updating the snooze.
         // 在更新睡眠之后设置下一次提醒。
-        setNextAlert(context);
+//        setNextAlert(context);
     }
 
     /**

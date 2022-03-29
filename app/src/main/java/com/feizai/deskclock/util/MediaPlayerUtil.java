@@ -68,7 +68,7 @@ public class MediaPlayerUtil {
 //        private static final MediaPlayerUtil sInstance = new MediaPlayerUtil();
 //    }
 
-    public MediaPlayerUtil setDataSource(String fileName, boolean isLoop) {
+    public MediaPlayerUtil setDataSource(String fileName) {
         if (mMediaPlayer == null) {
             LogUtil.i("MediaPlayer is null");
         } else {
@@ -87,11 +87,6 @@ public class MediaPlayerUtil {
                         AssetFileDescriptor assetFileDescriptor = mContext.getResources().getAssets().openFd(fileName);
                         mMediaPlayer.setDataSource(assetFileDescriptor.getFileDescriptor(), assetFileDescriptor.getStartOffset(), assetFileDescriptor.getLength());
                     }
-                    if (isLoop) {
-                        mMediaPlayer.setLooping(true);
-                    }
-                    this.isLoop = isLoop;
-                    mMediaPlayer.prepare();
                 }
             } catch (IOException e) {
                 LogUtil.e("Resource loading failed.");
@@ -102,7 +97,7 @@ public class MediaPlayerUtil {
         return this;
     }
 
-    public MediaPlayerUtil setDataSource(@NonNull Uri uri, boolean isLoop) {
+    public MediaPlayerUtil setDataSource(@NonNull Uri uri) {
         if (mMediaPlayer == null) {
             LogUtil.i("MediaPlayer is null");
         } else {
@@ -114,10 +109,6 @@ public class MediaPlayerUtil {
                 mFileName = "";
                 mUri = uri;
                 mMediaPlayer.setDataSource(mContext,uri);
-                if (isLoop) {
-                    mMediaPlayer.setLooping(true);
-                }
-                this.isLoop = isLoop;
                 mMediaPlayer.prepare();
             } catch (IOException e) {
                 LogUtil.e("Resource loading failed.");
@@ -129,20 +120,26 @@ public class MediaPlayerUtil {
     }
 
     public MediaPlayerUtil play() {
+        LogUtil.d("MediaPlayer play()");
         if (mMediaPlayer == null) {
             LogUtil.i("MediaPlayer is null");
         } else {
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.stop();
             }
-            if (!isPrepared){
-                if (!TextUtils.isEmpty(mFileName)) {
-                    setDataSource(mFileName, isLoop);
-                } else if (mUri != null) {
-                    setDataSource(mUri, isLoop);
-                }
+//            if (!isPrepared){
+//                if (!TextUtils.isEmpty(mFileName)) {
+//                    setDataSource(mFileName);
+//                } else if (mUri != null) {
+//                    setDataSource(mUri);
+//                }
+//            }
+            try {
+                mMediaPlayer.prepare();
+                mMediaPlayer.start();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            mMediaPlayer.start();
         }
         return this;
     }

@@ -15,6 +15,7 @@ import android.telephony.TelephonyManager;
 
 import androidx.annotation.Nullable;
 
+import com.feizai.deskclock.activity.AlarmAlertFullScreen;
 import com.feizai.deskclock.data.Alarm;
 import com.feizai.deskclock.data.Alarms;
 import com.feizai.deskclock.util.LogUtil;
@@ -147,10 +148,16 @@ public class AlarmService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
-
+        LogUtil.v("当前响铃闹钟 alarm " + alarm.toString(this));
         if (mCurrentAlarm != null) {
-            LogUtil.v("已经有一个闹钟响铃了");
+            LogUtil.v("已经有一个闹钟响铃了 mCurrentAlarm " + mCurrentAlarm.toString(this));
+            LogUtil.v("已经有一个闹钟响铃了 alarm " + alarm.toString(this));
             sendKillBroadcast(mCurrentAlarm);
+            Intent alarmAlert = new Intent(this, AlarmAlertFullScreen.class);
+            alarmAlert.putExtra(Alarms.ALARM_INTENT_EXTRA, alarm);
+            alarmAlert.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+            startActivity(alarmAlert);
         }
 
         play(alarm);
@@ -234,9 +241,9 @@ public class AlarmService extends Service {
                 if (mTelephonyManager.getCallState() != TelephonyManager.CALL_STATE_IDLE) {
                     LogUtil.v("Using the in-call alarm");
                     mMediaPlayerUtil.setVolume(IN_CALL_VOLUME, IN_CALL_VOLUME);
-                    mMediaPlayerUtil.setDataSource("in_call_alarm.ogg",true);
+                    mMediaPlayerUtil.setDataSource("in_call_alarm.ogg");
                 } else {
-                    mMediaPlayerUtil.setDataSource(alert,true);
+                    mMediaPlayerUtil.setDataSource(alert);
                 }
                 startAlarm();
             } catch (Exception e) {
@@ -247,7 +254,7 @@ public class AlarmService extends Service {
                  * 铃声可能在 SD 卡上，现在可能很忙。 使用后备铃声。
                  */
                 try {
-                    mMediaPlayerUtil.setDataSource("fallbackring.ogg",true);
+                    mMediaPlayerUtil.setDataSource("fallbackring.ogg");
                     startAlarm();
                 } catch (Exception e1) {
                     e.printStackTrace();
@@ -285,7 +292,7 @@ public class AlarmService extends Service {
         if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0) {
             if (mMediaPlayerUtil != null) {
                 mMediaPlayerUtil.setAudioStreamType(AudioManager.STREAM_ALARM);
-//                mMediaPlayerUtil.setLoop(true);
+                mMediaPlayerUtil.setLoop(true);
                 mMediaPlayerUtil.play();
             } else {
                 LogUtil.v("MediaPlayerUtil is null");

@@ -206,10 +206,12 @@ public class AlarmReceiver extends BroadcastReceiver {
          * take care of displaying it if it's OK to do so.
          * 新：在此处嵌入全屏 UI。 如果可以，通知管理器将负责显示它。
          */
-        Intent alarmAlert = new Intent(context, alertActivityClass);
+//        Intent alarmAlert = new Intent(context, alertActivityClass);
+        Intent alarmAlert = new Intent(context, AlarmAlertFullScreen.class);
         alarmAlert.putExtra(Alarms.ALARM_INTENT_EXTRA, alarm);
         alarmAlert.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+        context.startActivity(alarmAlert);
         NotificationManager manager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(String.valueOf(alarm.id), APP_NAME, NotificationManager.IMPORTANCE_HIGH);
@@ -223,7 +225,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher))
                 .setContentIntent(alarmNotifyPending)
                 .setDefaults(Notification.DEFAULT_LIGHTS)
-                .setFullScreenIntent(PendingIntent.getActivity(context, alarm.id, alarmAlert, 0), true)
+//                .setFullScreenIntent(PendingIntent.getActivity(context, alarm.id, alarmAlert, 0), true)
                 .build();
         notification.flags |= Notification.FLAG_SHOW_LIGHTS
                 | Notification.FLAG_ONGOING_EVENT;

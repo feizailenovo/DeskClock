@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.feizai.deskclock">
+    package="com.feizai.deskclock"
+    android:sharedUserId="android.uid.system">
 
     <!--    <original-package>标签用以设置应用 源码包名，即Java文件所在的源码程序包层次，android工程中真实的源代码层次结构。-->
     <original-package android:name="com.feizai.deskclock" />
@@ -55,13 +56,13 @@
             android:taskAffinity="" />
 
         <!--        闹钟响铃时的弹框-->
-        <activity
-            android:name=".activity.AlarmAlert"
-            android:configChanges="orientation|keyboardHidden|keyboard|navigation"
-            android:excludeFromRecents="true"
-            android:exported="true"
-            android:launchMode="singleInstance"
-            android:taskAffinity="" />
+<!--        <activity-->
+<!--            android:name=".activity.AlarmAlert"-->
+<!--            android:configChanges="orientation|keyboardHidden|keyboard|navigation"-->
+<!--            android:excludeFromRecents="true"-->
+<!--            android:exported="true"-->
+<!--            android:launchMode="singleInstance"-->
+<!--            android:taskAffinity="" />-->
 
         <!--        闹钟初始化广播-->
         <receiver
