@@ -143,12 +143,13 @@ public class AlarmService extends Service {
         final Alarm alarm = intent.getParcelableExtra(Alarms.ALARM_INTENT_EXTRA);
 
         if (alarm == null) {
-            LogUtil.v("AlarmKlaxon failed to parse the alarm from the intent");
+            LogUtil.v("AlarmService failed to parse the alarm from the intent");
             stopSelf();
             return START_NOT_STICKY;
         }
 
         if (mCurrentAlarm != null) {
+            LogUtil.v("已经有一个闹钟响铃了");
             sendKillBroadcast(mCurrentAlarm);
         }
 
