@@ -82,6 +82,8 @@ public class AlarmReceiver extends BroadcastReceiver {
             return;
         }
 
+        LogUtil.d(alarm.toString(context));
+
 
         /**
          * Disable the snooze alert if this alarm is the snooze.
@@ -128,7 +130,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
 
         /**
-         * Maintain a cpu wake lock until the AlarmAlert and AlarmKlaxon can pick it up.
+         * Maintain a cpu wake lock until the AlarmAlert and AlarmService can pick it up.
          * 保持 cpu 唤醒锁定，直到 AlarmAlert 和 AlarmService 可以拾取它。
          */
         AlarmAlertWakeLock.acquireCpuWakeLock(context);
