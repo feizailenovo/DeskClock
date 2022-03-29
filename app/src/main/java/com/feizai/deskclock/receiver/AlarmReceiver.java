@@ -10,9 +10,11 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Parcel;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -36,6 +38,9 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     private final static String APP_NAME = "DeskClock";
     private final static String PACKAGE_NAME = "com.feizai.deskclock";
+    private static final String PREFERENCES = "AlarmClock";
+    final static String PREF_AT_THE_SAME_TIME = "at_the_same_time";
+    final static String PREF_MIN_TIME = "min_time";
 
     /**
      * 如果警报早于 STALE_WINDOW，则忽略。 这可能是时间或时区更改的结果
@@ -47,6 +52,7 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
+        LogUtil.d("AlarmReceiver onReceive action " + action);
         if (Alarms.ALARM_KILLED.equals(action)) {
             updateNotification(context,
                     (Alarm) intent.getParcelableExtra(Alarms.ALARM_INTENT_EXTRA),
@@ -58,6 +64,10 @@ public class AlarmReceiver extends BroadcastReceiver {
         } else if (!Alarms.ALARM_ALERT_ACTION.equals(action)) {
             return;
         }
+
+        /**
+         * 以下是闹钟响铃后的操作
+         */
 
         Alarm alarm = null;
         /**
@@ -95,18 +105,19 @@ public class AlarmReceiver extends BroadcastReceiver {
          * Disable this alarm if it does not repeat
          * 如果不重复，则禁用此闹钟。
          */
-        if (!alarm.daysOfWeek.isRepeatSet()) {
-            Alarms.enableAlarm(context, alarm.id, false);
-        } else {
-
-            /**
-             * Enable the next alert if there is one. The above call to
-             * enableAlarm will call setNextAlert so avoid calling it twice.
-             * 如果有下一个闹钟，则启用下一个闹钟。
-             * 上面对 enableAlarm 的调用将调用 setNextAlert 所以避免调用它两次。
-             */
-            Alarms.setNextAlert(context);
-        }
+        getAtTheSameTimeAlarm(context);
+//        if (!alarm.daysOfWeek.isRepeatSet()) {
+//            Alarms.enableAlarm(context, alarm.id, false);
+//        } else {
+//
+//            /**
+//             * Enable the next alert if there is one. The above call to
+//             * enableAlarm will call setNextAlert so avoid calling it twice.
+//             * 如果有下一个闹钟，则启用下一个闹钟。
+//             * 上面对 enableAlarm 的调用将调用 setNextAlert 所以避免调用它两次。
+//             */
+//            Alarms.setNextAlert(context);
+//        }
 
         // Intentionally verbose: always log the alarm time to provide useful
         // information in bug reports.
@@ -262,5 +273,23 @@ public class AlarmReceiver extends BroadcastReceiver {
          */
         manager.cancel(alarm.id);
         manager.notify(alarm.id, notification);
+    }
+
+    private void getAtTheSameTimeAlarm(final Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFERENCES, 0);
+        String idStr = prefs.getString(PREF_AT_THE_SAME_TIME, "");
+        if (!TextUtils.isEmpty(idStr)) {
+            String[] ids = idStr.split(",");
+            for (String id : ids) {
+                int i = Integer.parseInt(id);
+                Alarm alarm = Alarms.getAlarm(context.getContentResolver(), i);
+                if (alarm != null) {
+                    if (!alarm.daysOfWeek.isRepeatSet()) {
+                        Alarms.enableAlarm(context, i, false);
+                    }
+                }
+            }
+            Alarms.setNextAlert(context);
+        }
     }
 }

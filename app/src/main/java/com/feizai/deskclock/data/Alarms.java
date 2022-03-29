@@ -14,11 +14,14 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Parcel;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.text.format.DateFormat;
 
 import com.feizai.deskclock.util.LogUtil;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * Author: chenhao
@@ -117,6 +120,8 @@ public class Alarms {
 
     final static String PREF_SNOOZE_ID = "snooze_id";
     final static String PREF_SNOOZE_TIME = "snooze_time";
+    final static String PREF_AT_THE_SAME_TIME = "at_the_same_time";
+    final static String PREF_MIN_TIME = "min_time";
 
     private final static String DM12 = "E h:mm aa";
     private final static String DM24 = "E h:mm";
@@ -150,6 +155,9 @@ public class Alarms {
      */
     public static void deleteAlarm(Context context, int alarmId) {
         if (alarmId == -1) return;
+
+        enableAlarm(context, alarmId, false);
+        setNextAlert(context);
 
         ContentResolver contentResolver = context.getContentResolver();
         /* If alarm is snoozing, lose it */
@@ -302,7 +310,7 @@ public class Alarms {
      */
     public static void enableAlarm(final Context context, final int id, boolean enabled) {
         enableAlarmInternal(context, id, enabled);
-        setNextAlert(context);
+//        setNextAlert(context);
     }
 
     private static void enableAlarmInternal(final Context context,
@@ -328,7 +336,7 @@ public class Alarms {
          */
         if (enabled) {
             long time = 0;
-            if (!alarm.daysOfWeek.isRepeatSet()) {
+            if (alarm.daysOfWeek.isRepeatSet()) {
                 time = calculateAlarm(alarm);
             }
             values.put(Alarm.Columns.ALARM_TIME, time);
@@ -344,6 +352,7 @@ public class Alarms {
     }
 
     public static Alarm calculateNextAlert(final Context context) {
+        List<Alarm> alarms = new ArrayList<>();
         Alarm alarm = null;
         long minTime = Long.MAX_VALUE;
         long now = System.currentTimeMillis();
@@ -352,23 +361,31 @@ public class Alarms {
             if (cursor.moveToFirst()) {
                 do {
                     Alarm a = new Alarm(cursor);
+                    LogUtil.d(a.toString(context));
                     /**
                      * A time of 0 indicates this is a repeating alarm, so
                      * calculate the time to get the next alert.
                      * 时间为O表示这是一个重复的警报，因此计算获得下一个警报的时间。
                      */
-                    if (a.time == 0) {
+                    if (a.time == 0 && a.enabled) {
                         a.time = calculateAlarm(a);
-                    } else if (a.time < now) {
+                    }
+                    if (a.time < now) {
                         LogUtil.v("Disabling expired alarm set for ");
                         // Expired alarm, disable it and move along.
                         // 警报器过期了，解除警报，然后离开。
                         enableAlarmInternal(context, a, false);
-                        continue;
+//                        continue;
                     }
                     if (a.time < minTime) {
+                        alarms.clear();
                         minTime = a.time;
+                        saveAtTheSameTimeAlarm(context, a.id, minTime);
                         alarm = a;
+                        alarms.add(a);
+                    } else if (a.time == minTime) {
+                        saveAtTheSameTimeAlarm(context, a.id, minTime);
+                        alarms.add(a);
                     }
                 } while (cursor.moveToNext());
             }
@@ -410,14 +427,16 @@ public class Alarms {
      * 如果设置了则激活小睡，否则加载所有闹钟，激活下一次警报。
      */
     public static void setNextAlert(final Context context) {
-        if (!enableSnoozeAlert(context)) {
+//        if (!enableSnoozeAlert(context)) {
             Alarm alarm = calculateNextAlert(context);
             if (alarm != null) {
+                LogUtil.d("setNextAlert alarm not null");
                 enableAlert(context, alarm, alarm.time);
             } else {
+                LogUtil.d("setNextAlert alarm null");
                 disableAlert(context);
             }
-        }
+//        }
     }
 
     /**
@@ -433,7 +452,7 @@ public class Alarms {
         AlarmManager am = (AlarmManager)
                 context.getSystemService(Context.ALARM_SERVICE);
 
-        LogUtil.v( "** setAlert id " + alarm.id + " atTime " + atTimeInMillis);
+        LogUtil.v("** enableAlert id " + alarm.id + " atTime " + atTimeInMillis);
 
         Intent intent = new Intent();
         intent.setAction(ALARM_ALERT_ACTION);
@@ -488,10 +507,12 @@ public class Alarms {
      * @param context
      */
     static void disableAlert(Context context) {
-        AlarmManager am = (AlarmManager)
-                context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent();
+        intent.setAction(ALARM_ALERT_ACTION);
+        intent.setPackage(PACKAGE_NAME);
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         PendingIntent sender = PendingIntent.getBroadcast(
-                context, 0, new Intent(ALARM_ALERT_ACTION),
+                context, 0, intent,
                 PendingIntent.FLAG_CANCEL_CURRENT);
         am.cancel(sender);
         setStatusBarIcon(context, false);
@@ -499,7 +520,7 @@ public class Alarms {
     }
 
     public static void saveSnoozeAlert(final Context context, final int id,
-                                final long time) {
+                                       final long time) {
         SharedPreferences prefs = context.getSharedPreferences(PREFERENCES, 0);
         if (id == -1) {
             clearSnoozePreference(context, prefs);
@@ -532,12 +553,12 @@ public class Alarms {
     }
 
 
-
     /**
      * Helper to remove the snooze preference. Do not use clear because that
      * will erase the clock preferences. Also clear the snooze notification in
      * the window shade.
      * 助手来移除睡眠的preferences。不要使用clear，因为那会擦除时钟的preferences。也清除视窗上的睡眠通知。
+     *
      * @param context
      * @param prefs
      */
@@ -588,21 +609,55 @@ public class Alarms {
         return true;
     }
 
+    private static void saveAtTheSameTimeAlarm(final Context context, int alarmId, long minTime) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFERENCES, 0);
+        SharedPreferences.Editor editor = prefs.edit();
+        String idStr = prefs.getString(PREF_AT_THE_SAME_TIME, "");
+        long prefMinTime = prefs.getLong(PREF_MIN_TIME, 0L);
+        if (prefMinTime == 0) {
+            editor.putString(PREF_AT_THE_SAME_TIME, String.valueOf(alarmId));
+            editor.putLong(PREF_MIN_TIME, minTime);
+            editor.apply();
+            editor.commit();
+        } else if (prefMinTime == minTime) {
+            if (TextUtils.isEmpty(idStr)) {
+                editor.putString(PREF_AT_THE_SAME_TIME, String.valueOf(alarmId));
+            } else {
+                String[] split = idStr.split(",");
+                for (String s : split) {
+                    if (s.equals(String.valueOf(alarmId))) {
+                        return;
+                    }
+                }
+                idStr = idStr + "," + String.valueOf(alarmId);
+                editor.putString(PREF_AT_THE_SAME_TIME, idStr);
+            }
+            editor.apply();
+            editor.commit();
+        } else {
+            editor.putString(PREF_AT_THE_SAME_TIME, String.valueOf(alarmId));
+            editor.putLong(PREF_MIN_TIME, minTime);
+            editor.apply();
+            editor.commit();
+        }
+    }
+
     /**
      * Tells the StatusBar whether the alarm is enabled or disabled
      * 告诉StatusBar闹钟图标是否开启或关闭
      */
     private static void setStatusBarIcon(Context context, boolean enabled) {
-        Intent alarmChanged = new Intent("android.intent.action.ALARM_CHANGED");
-//        alarmChanged.setAction();
+        Intent alarmChanged = new Intent();
+        alarmChanged.setAction("android.intent.action.ALARM_CHANGED");
 //        alarmChanged.setAction(Intent.ACTION_ALARM_CHANGED);
         alarmChanged.putExtra("alarmSet", enabled);
-//        alarmChanged.setPackage(PACKAGE_NAME);
+        alarmChanged.setPackage(PACKAGE_NAME);
         context.sendBroadcast(alarmChanged);
     }
 
     /**
      * 计算闹钟响铃时间
+     *
      * @param alarm
      * @return
      */
