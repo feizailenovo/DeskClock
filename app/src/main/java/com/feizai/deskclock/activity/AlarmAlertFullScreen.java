@@ -65,6 +65,7 @@ public class AlarmAlertFullScreen extends BaseActivity {
          * 注册广播接收器以获取闹钟终止/暂停/解除意图。
          */
         IntentFilter filter = new IntentFilter();
+        filter.addAction(Alarms.ALARM_KILLED);
         filter.addAction(Alarms.ALARM_SNOOZE_ACTION);
         filter.addAction(Alarms.ALARM_DISMISS_ACTION);
         registerReceiver(mReceiver, filter);

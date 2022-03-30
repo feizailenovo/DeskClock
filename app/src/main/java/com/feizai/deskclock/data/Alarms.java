@@ -143,9 +143,9 @@ public class Alarms {
         Uri uri = context.getContentResolver().insert(Alarm.Columns.CONTENT_URI, values);
         alarm.id = (int) ContentUris.parseId(uri);
 
-        if (alarm.enabled) {
-            clearSnoozeIfNeeded(context, timeInMillis);
-        }
+//        if (alarm.enabled) {
+//            clearSnoozeIfNeeded(context, timeInMillis);
+//        }
         setNextAlert(context);
         return timeInMillis;
     }
@@ -236,7 +236,7 @@ public class Alarms {
                 context.getSharedPreferences(PREFERENCES, 0);
         long snoozeTime = prefs.getLong(PREF_SNOOZE_TIME, 0);
         if (alarmTime < snoozeTime) {
-            clearSnoozePreference(context, prefs);
+//            clearSnoozePreference(context, prefs);
         }
     }
 
@@ -297,7 +297,7 @@ public class Alarms {
              * 如果此闹钟在贪睡闹钟之前触发，则禁用贪睡闹钟。这对每个警报都有效，
              * 因为用户最有可能打算让修改后的警报下次触发。
              */
-            clearSnoozeIfNeeded(context, timeInMillis);
+//            clearSnoozeIfNeeded(context, timeInMillis);
         }
 
         setNextAlert(context);
@@ -383,7 +383,7 @@ public class Alarms {
                         // Expired alarm, disable it and move along.
                         // 警报器过期了，解除警报，然后离开。
                         enableAlarmInternal(context, a, false);
-                    }else {
+                    } else {
                         if (a.time < minTime) {
                             alarms.clear();
                             minTime = a.time;
@@ -436,14 +436,14 @@ public class Alarms {
      */
     public static void setNextAlert(final Context context) {
 //        if (!enableSnoozeAlert(context)) {
-            Alarm alarm = calculateNextAlert(context);
-            if (alarm != null) {
-                LogUtil.d("setNextAlert alarm not null");
-                enableAlert(context, alarm, alarm.time);
-            } else {
-                LogUtil.d("setNextAlert alarm null");
-                disableAlert(context);
-            }
+        Alarm alarm = calculateNextAlert(context);
+        if (alarm != null) {
+            LogUtil.d("setNextAlert alarm not null");
+            enableAlert(context, alarm, alarm.time);
+        } else {
+            LogUtil.d("setNextAlert alarm null");
+            disableAlert(context);
+        }
 //        }
     }
 
@@ -532,17 +532,32 @@ public class Alarms {
         if (id != -1) {
             Alarm alarm = getAlarm(context.getContentResolver(), id);
             if (alarm != null) {
-                alarm.time = time;
+                alarm.time = (time == -1 ? 0 : time);
                 setAlarm(context, alarm);
             }
         }
         SharedPreferences prefs = context.getSharedPreferences(PREFERENCES, 0);
-        if (id == -1) {
-            clearSnoozePreference(context, prefs);
+        boolean isSave = false;
+        if (time == -1) {
+            clearSnoozePreference(context, prefs, id);
         } else {
             SharedPreferences.Editor ed = prefs.edit();
-            ed.putInt(PREF_SNOOZE_ID, id);
-            ed.putLong(PREF_SNOOZE_TIME, time);
+            String snoozeIds = prefs.getString(PREF_SNOOZE_ID, "");
+            if (TextUtils.isEmpty(snoozeIds)) {
+                ed.putString(PREF_SNOOZE_ID, String.valueOf(id));
+            } else {
+                String[] ids = snoozeIds.split(",");
+                for (String s : ids) {
+                    if (s.equals(String.valueOf(id))) {
+                        isSave = true;
+                        break;
+                    }
+                }
+                if (!isSave) {
+                    snoozeIds = snoozeIds + "," + String.valueOf(id);
+                    ed.putString(PREF_SNOOZE_ID, snoozeIds);
+                }
+            }
             ed.apply();
         }
         // Set the next alert after updating the snooze.
@@ -556,14 +571,27 @@ public class Alarms {
      */
     public static void disableSnoozeAlert(final Context context, final int id) {
         SharedPreferences prefs = context.getSharedPreferences(PREFERENCES, 0);
-        int snoozeId = prefs.getInt(PREF_SNOOZE_ID, -1);
-        if (snoozeId == -1) {
-            // No snooze set, do nothing.
+        String snoozeIds = prefs.getString(PREF_SNOOZE_ID, "");
+        StringBuilder builder = new StringBuilder();
+        if (TextUtils.isEmpty(snoozeIds)) {
             return;
-        } else if (snoozeId == id) {
-            // This is the same id so clear the shared prefs.
-            // 这是相同的id，共享的prefs。
-            clearSnoozePreference(context, prefs);
+        } else {
+            String[] ids = snoozeIds.split(",");
+            for (String s : ids) {
+                if (s.equals(String.valueOf(id))) {
+                    NotificationManager nm = (NotificationManager)
+                            context.getSystemService(Context.NOTIFICATION_SERVICE);
+                    nm.cancel(id);
+                } else {
+                    if (builder.length() > 0) {
+                        builder.append(",");
+                    }
+                    builder.append(s);
+                }
+            }
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(PREF_SNOOZE_ID, builder.toString());
+            editor.apply();
         }
     }
 
@@ -577,18 +605,14 @@ public class Alarms {
      * @param context
      * @param prefs
      */
-    private static void clearSnoozePreference(final Context context, final SharedPreferences prefs) {
-        final int alarmId = prefs.getInt(PREF_SNOOZE_ID, -1);
-        if (alarmId != -1) {
-            NotificationManager nm = (NotificationManager)
-                    context.getSystemService(Context.NOTIFICATION_SERVICE);
-            nm.cancel(alarmId);
+    private static void clearSnoozePreference(final Context context, final SharedPreferences prefs, final int id) {
+        if (id == -1) {
+            final SharedPreferences.Editor ed = prefs.edit();
+            ed.remove(PREF_SNOOZE_ID);
+            ed.apply();
+        } else {
+            disableSnoozeAlert(context, id);
         }
-
-        final SharedPreferences.Editor ed = prefs.edit();
-        ed.remove(PREF_SNOOZE_ID);
-        ed.remove(PREF_SNOOZE_TIME);
-        ed.apply();
     }
 
     ;

@@ -59,7 +59,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                     intent.getIntExtra(Alarms.ALARM_KILLED_TIMEOUT, -1));
             return;
         } else if (Alarms.CANCEL_SNOOZE.equals(action)) {
-            Alarms.saveSnoozeAlert(context, -1, -1);
+            int alarmId = intent.getIntExtra(Alarms.ALARM_ID, -1);
+            Alarms.saveSnoozeAlert(context, alarmId, -1);
             return;
         } else if (!Alarms.ALARM_ALERT_ACTION.equals(action)) {
             return;
