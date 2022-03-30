@@ -59,6 +59,7 @@ public final class Alarm implements Parcelable {
         dest.writeString(label);
         dest.writeParcelable(alert, flags);
         dest.writeInt(silent ? 1 : 0);
+        dest.writeInt(editable ? 1 : 0);
     }
     //////////////////////////////
     // by end
@@ -124,10 +125,18 @@ public final class Alarm implements Parcelable {
 
         /**
          * Audio alert to play when alarm triggers
-         * 闹钟响铃铃声
+         * 闹钟响铃铃声,为silent时表示该闹钟静默
          * <P>Type: STRING</P>
          */
         public static final String ALERT = "alert";
+
+        /**
+         * True if alarm should edit
+         * 闹钟是否可编辑（区分是否为平台闹钟）
+         * <P>Type: BOOLEAN</P>
+         *
+         */
+        public static final String EDITABLE = "editable";
 
         /**
          * The default sort order for this table
@@ -146,7 +155,7 @@ public final class Alarm implements Parcelable {
          */
         static final String[] ALARM_QUERY_COLUMNS = {
                 _ID, HOUR, MINUTES, DAYS_OF_WEEK, ALARM_TIME,
-                ENABLED, VIBRATE, MESSAGE, ALERT
+                ENABLED, VIBRATE, MESSAGE, EDITABLE, ALERT
         };
 
         /**
@@ -162,7 +171,8 @@ public final class Alarm implements Parcelable {
         public static final int ALARM_ENABLED_INDEX = 5;
         public static final int ALARM_VIBRATE_INDEX = 6;
         public static final int ALARM_MESSAGE_INDEX = 7;
-        public static final int ALARM_ALERT_INDEX = 8;
+        public static final int ALARM_EDITABLE_INDEX = 8;
+        public static final int ALARM_ALERT_INDEX = 9;
     }
     //////////////////////////////
     // End 每一列定义结束
@@ -181,6 +191,7 @@ public final class Alarm implements Parcelable {
     public String label;
     public Uri alert;
     public boolean silent;
+    public boolean editable;
 
     protected Alarm(Parcel parcel) {
         id = parcel.readInt();
@@ -193,6 +204,7 @@ public final class Alarm implements Parcelable {
         label = parcel.readString();
         alert = (Uri) parcel.readParcelable(null);
         silent = parcel.readInt() == 1;
+        editable = parcel.readInt() == 1;
     }
 
     public Alarm(Cursor cursor) {
@@ -205,10 +217,9 @@ public final class Alarm implements Parcelable {
         vibrate = cursor.getInt(Columns.ALARM_VIBRATE_INDEX) == 1;
         label = cursor.getString(Columns.ALARM_MESSAGE_INDEX);
         String alertString = cursor.getString(Columns.ALARM_ALERT_INDEX);
+        editable = cursor.getInt(Columns.ALARM_EDITABLE_INDEX) == 1;
         if (Alarms.ALARM_ALERT_SILENT.equals(alertString)) {
-            if (true) {
-                LogUtil.v("Alarm is marked as silent");
-            }
+            LogUtil.v("Alarm is marked as silent");
             silent = true;
         } else {
             if (alertString != null && alertString.length() != 0) {
@@ -220,6 +231,7 @@ public final class Alarm implements Parcelable {
             if (alert == null) {
                 alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
             }
+            silent = false;
         }
     }
 
@@ -236,6 +248,8 @@ public final class Alarm implements Parcelable {
         vibrate = true;
         daysOfWeek = new DaysOfWeek(0x00);
         alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        silent = false;
+        editable = true;
     }
 
     public String getLabelOrDefault() {
@@ -257,6 +271,7 @@ public final class Alarm implements Parcelable {
                 ", label='" + label + '\'' +
                 ", alert=" + alert +
                 ", silent=" + silent +
+                ", editable=" + editable +
                 '}';
     }
 

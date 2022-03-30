@@ -55,14 +55,15 @@ public class AlarmProvider extends ContentProvider {
                     "enabled INTEGER, " +
                     "vibrate INTEGER, " +
                     "message TEXT, " +
+                    "editable INTEGER, " +
                     "alert TEXT);");
 
             // insert default alarms
             String insertMe = "INSERT INTO alarms " +
-                    "(hour, minutes, daysofweek, alarmtime, enabled, vibrate, message, alert) " +
+                    "(hour, minutes, daysofweek, alarmtime, enabled, vibrate, message, editable, alert) " +
                     "VALUES ";
-            db.execSQL(insertMe + "(8, 30, 31, 0, 0, 1, '', '');");
-            db.execSQL(insertMe + "(9, 00, 96, 0, 0, 1, '', '');");
+            db.execSQL(insertMe + "(8, 30, 31, 0, 0, 1, '', 1, '');");
+            db.execSQL(insertMe + "(9, 00, 96, 0, 0, 1, '', 1, '');");
         }
 
         @Override
