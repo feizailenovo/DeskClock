@@ -109,7 +109,6 @@ public class MediaPlayerUtil {
                 mFileName = "";
                 mUri = uri;
                 mMediaPlayer.setDataSource(mContext,uri);
-                mMediaPlayer.prepare();
             } catch (IOException e) {
                 LogUtil.e("Resource loading failed.");
                 LogUtil.e(e.getMessage());
