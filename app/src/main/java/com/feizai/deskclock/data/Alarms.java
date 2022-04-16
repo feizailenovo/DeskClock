@@ -78,6 +78,8 @@ public class Alarms {
      */
     public static final String ALARM_KILLED = "alarm_killed";
 
+    public static final String ALARM_TIMEOUT = "alarm_timeout";
+
     /**
      * Extra in the ALARM_KILLED intent to indicate to the user how long the
      * alarm played before being killed.
@@ -103,6 +105,8 @@ public class Alarms {
      * 这个意图是闹钟超时取消报警
      */
     public static final String ALARM_INTENT_EXTRA = "intent.extra.alarm";
+
+    public static final String ALARM_TIMEOUT_INTENT_EXTRA = "intent.extra.alarm_timeout";
 
     /**
      * This extra is the raw Alarm object data. It is used in the
@@ -138,7 +142,11 @@ public class Alarms {
      */
     public static long addAlarm(Context context, Alarm alarm) {
         long timeInMillis = calculateAlarm(alarm);
-        alarm.time = timeInMillis;
+        if (alarm.enabled) {
+            alarm.time = timeInMillis;
+        } else {
+            alarm.time = 0;
+        }
 
         ContentValues values = createContentValues(alarm);
         Uri uri = context.getContentResolver().insert(Alarm.Columns.CONTENT_URI, values);
@@ -160,7 +168,6 @@ public class Alarms {
         if (alarmId == -1) return;
 
         enableAlarm(context, alarmId, false);
-        setNextAlert(context);
 
         ContentResolver contentResolver = context.getContentResolver();
         /* If alarm is snoozing, lose it */
@@ -205,10 +212,10 @@ public class Alarms {
          * used later to disable expire alarms.
          * 如果此闹钟不重复，请设置alarm_time的值。这将用于禁用过期闹钟。
          */
-        long time = 0;
-        if (!alarm.daysOfWeek.isRepeatSet()) {
-            time = calculateAlarm(alarm);
-        }
+//        long time = 0;
+//        if (!alarm.daysOfWeek.isRepeatSet()) {
+//            time = calculateAlarm(alarm);
+//        }
 
         values.put(Alarm.Columns.ENABLED, alarm.enabled ? 1 : 0);
         values.put(Alarm.Columns.HOUR, alarm.hour);
@@ -339,16 +346,25 @@ public class Alarms {
          * value in Alarm may be old.
          * 如果我们启用闹钟，计算闹钟时间，因为闹钟的时间值可能是旧的。
          */
+        long time = 0;
         if (enabled) {
-            long time = 0;
-            if (alarm.daysOfWeek.isRepeatSet()) {
-                time = calculateAlarm(alarm);
-            }
-            values.put(Alarm.Columns.ALARM_TIME, time);
+            time = calculateAlarm(alarm);
+            alarm.time = time;
+            LogUtil.d("enableAlarmInternal" + alarm.time);
         } else {
             // Clear the snooze if the id matches.
             // 清除ID相同的睡眠闹钟
             disableSnoozeAlert(context, alarm.id);
+            Intent intent = new Intent();
+            intent.setAction(ALARM_ALERT_ACTION);
+            intent.setPackage(PACKAGE_NAME);
+            Parcel out = Parcel.obtain();
+            alarm.writeToParcel(out, 0);
+            out.setDataPosition(0);
+            intent.putExtra(ALARM_RAW_DATA, out.marshall());
+            AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+            am.cancel(sender);
         }
 
         resolver.update(
@@ -357,7 +373,6 @@ public class Alarms {
     }
 
     public static Alarm calculateNextAlert(final Context context) {
-        List<Alarm> alarms = new ArrayList<>();
         Alarm alarm = null;
         long minTime = Long.MAX_VALUE;
         long now = System.currentTimeMillis();
@@ -366,34 +381,37 @@ public class Alarms {
             if (cursor.moveToFirst()) {
                 do {
                     Alarm a = new Alarm(cursor);
-                    LogUtil.d("calculateNextAlert " + a.toString(context));
                     /**
                      * A time of 0 indicates this is a repeating alarm, so
                      * calculate the time to get the next alert.
                      * 时间为O表示这是一个重复的警报，因此计算获得下一个警报的时间。
                      */
-                    // Expired alarm, disable it and move along.
-                    // 警报器过期了，解除警报，然后离开。
-                    if (a.enabled) {
-                        if (a.daysOfWeek.isRepeatSet()) {
-                            a.time = calculateAlarm(a);
+                    if (a.time == 0) {
+                        if (a.enabled) {
+                            if (a.daysOfWeek.isRepeatSet()) {
+                                a.time = calculateAlarm(a);
+                            }
                         }
                     }
                     if (a.time < now) {
-                        LogUtil.v("Disabling expired alarm set for ");
-                        // Expired alarm, disable it and move along.
-                        // 警报器过期了，解除警报，然后离开。
-                        enableAlarmInternal(context, a, false);
+                        if (a.time != 0) {
+                            LogUtil.d("Disabling expired alarm set for ");
+                            // Expired alarm, disable it and move along.
+                            // 警报器过期了
+                            if (a.daysOfWeek.isRepeatSet()) {
+                                enableAlarmInternal(context, a, true);
+                            } else {
+                                enableAlarmInternal(context, a, false);
+                            }
+                            continue;
+                        }
                     } else {
                         if (a.time < minTime) {
-                            alarms.clear();
                             minTime = a.time;
                             saveAtTheSameTimeAlarm(context, a.id, minTime);
                             alarm = a;
-                            alarms.add(a);
                         } else if (a.time == minTime) {
                             saveAtTheSameTimeAlarm(context, a.id, minTime);
-                            alarms.add(a);
                         }
                     }
                 } while (cursor.moveToNext());
@@ -467,28 +485,29 @@ public class Alarms {
         intent.setAction(ALARM_ALERT_ACTION);
         intent.setPackage(PACKAGE_NAME);
 
-        // XXX: This is a slight hack to avoid an exception in the remote
-        // AlarmManagerService process. The AlarmManager adds extra data to
-        // this Intent which causes it to inflate. Since the remote process
-        // does not know about the Alarm class, it throws a
-        // ClassNotFoundException.
-        //
-        // To avoid this, we marshall the data ourselves and then parcel a plain
-        // byte[] array. The AlarmReceiver class knows to build the Alarm
-        // object from the byte[] array.
-        // XXX:这是为了避免远程AlarmManagerService进程中出现异常而进行的一种轻微修改。
-        // AlarmManager向这个Intent添加额外的数据，导致它膨胀。
-        // 由于远程进程不知道Alarm类，它将抛出ClassNotFoundException。
-        // 为了避免这种情况，我们自己打包数据，然后打包一个普通的byte[]数组。
-        // AlarmReceiver类知道从byte[]数组构建Alarm对象
-
-
-        PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, 0);
+        PendingIntent sender = PendingIntent.getBroadcast(
+                context, 0, intent, 0);
 
 //        am.set(AlarmManager.RTC_WAKEUP, atTimeInMillis, sender);
         //不同Android 版本的设置闹钟
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // XXX: This is a slight hack to avoid an exception in the remote
+            // AlarmManagerService process. The AlarmManager adds extra data to
+            // this Intent which causes it to inflate. Since the remote process
+            // does not know about the Alarm class, it throws a
+            // ClassNotFoundException.
+            //
+            // To avoid this, we marshall the data ourselves and then parcel a plain
+            // byte[] array. The AlarmReceiver class knows to build the Alarm
+            // object from the byte[] array.
+            // XXX:这是为了避免远程AlarmManagerService进程中出现异常而进行的一种轻微修改。
+            // AlarmManager向这个Intent添加额外的数据，导致它膨胀。
+            // 由于远程进程不知道Alarm类，它将抛出ClassNotFoundException。
+            // 为了避免这种情况，我们自己打包数据，然后打包一个普通的byte[]数组。
+            // AlarmReceiver类知道从byte[]数组构建Alarm对象
             Intent in = new Intent(context, AlarmReceiver.class);
+            in.setAction(ALARM_ALERT_ACTION);
+            in.setPackage(PACKAGE_NAME);
             Parcel out = Parcel.obtain();
             alarm.writeToParcel(out, 0);
             out.setDataPosition(0);
@@ -498,6 +517,8 @@ public class Alarms {
             am.setAlarmClock(alarmClockInfo, sender);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             Intent in = new Intent(context, AlarmReceiver.class);
+            in.setAction(ALARM_ALERT_ACTION);
+            in.setPackage(PACKAGE_NAME);
             Parcel out = Parcel.obtain();
             alarm.writeToParcel(out, 0);
             out.setDataPosition(0);
@@ -506,11 +527,14 @@ public class Alarms {
             am.setExact(AlarmManager.RTC_WAKEUP, atTimeInMillis, se);
         } else {
             Intent in = new Intent(context, AlarmReceiver.class);
+            in.setAction(ALARM_ALERT_ACTION);
+            in.setPackage(PACKAGE_NAME);
             Parcel out = Parcel.obtain();
             alarm.writeToParcel(out, 0);
             out.setDataPosition(0);
             in.putExtra(ALARM_RAW_DATA, out.marshall());
             PendingIntent se = PendingIntent.getBroadcast(context, 0, in, PendingIntent.FLAG_CANCEL_CURRENT);
+            am.set(AlarmManager.RTC_WAKEUP, atTimeInMillis, se);
         }
 
 //        AlarmManager.AlarmClockInfo nextAlarmClock = am.getNextAlarmClock();
@@ -529,13 +553,14 @@ public class Alarms {
      * @param context
      */
     static void disableAlert(Context context) {
-        Intent intent = new Intent();
+        Intent intent = new Intent(context, AlarmReceiver.class);
         intent.setAction(ALARM_ALERT_ACTION);
         intent.setPackage(PACKAGE_NAME);
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_NO_CREATE);
         if (sender != null) {
             am.cancel(sender);
+            sender.cancel();
         }
         setStatusBarIcon(context, false);
         saveNextAlarm(context, "");
@@ -546,7 +571,7 @@ public class Alarms {
         if (id != -1) {
             Alarm alarm = getAlarm(context.getContentResolver(), id);
             if (alarm != null) {
-                alarm.time = (time == -1 ? 0 : time);
+                alarm.time = (time == -1 ? (alarm.enabled ? calculateAlarm(alarm) : 0) : time);
                 setAlarm(context, alarm);
             }
         }
