@@ -17,6 +17,7 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 
+import com.feizai.deskclock.receiver.AlarmReceiver;
 import com.feizai.deskclock.util.LogUtil;
 
 import java.util.ArrayList;
@@ -462,7 +463,7 @@ public class Alarms {
 
         LogUtil.v("** enableAlert id " + alarm.id + " atTime " + atTimeInMillis);
 
-        Intent intent = new Intent();
+        Intent intent = new Intent(context, AlarmReceiver.class);
         intent.setAction(ALARM_ALERT_ACTION);
         intent.setPackage(PACKAGE_NAME);
 
@@ -480,23 +481,36 @@ public class Alarms {
         // 由于远程进程不知道Alarm类，它将抛出ClassNotFoundException。
         // 为了避免这种情况，我们自己打包数据，然后打包一个普通的byte[]数组。
         // AlarmReceiver类知道从byte[]数组构建Alarm对象
-        Parcel out = Parcel.obtain();
-        alarm.writeToParcel(out, 0);
-        out.setDataPosition(0);
-        intent.putExtra(ALARM_RAW_DATA, out.marshall());
 
-        PendingIntent sender = PendingIntent.getBroadcast(
-                context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+        PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, 0);
 
 //        am.set(AlarmManager.RTC_WAKEUP, atTimeInMillis, sender);
         //不同Android 版本的设置闹钟
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(atTimeInMillis, sender);
+            Intent in = new Intent(context, AlarmReceiver.class);
+            Parcel out = Parcel.obtain();
+            alarm.writeToParcel(out, 0);
+            out.setDataPosition(0);
+            in.putExtra(ALARM_RAW_DATA, out.marshall());
+            PendingIntent se = PendingIntent.getBroadcast(context, 0, in, PendingIntent.FLAG_UPDATE_CURRENT);
+            AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(atTimeInMillis, se);
             am.setAlarmClock(alarmClockInfo, sender);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            am.setExact(AlarmManager.RTC_WAKEUP, atTimeInMillis, sender);
+            Intent in = new Intent(context, AlarmReceiver.class);
+            Parcel out = Parcel.obtain();
+            alarm.writeToParcel(out, 0);
+            out.setDataPosition(0);
+            in.putExtra(ALARM_RAW_DATA, out.marshall());
+            PendingIntent se = PendingIntent.getBroadcast(context, 0, in, PendingIntent.FLAG_CANCEL_CURRENT);
+            am.setExact(AlarmManager.RTC_WAKEUP, atTimeInMillis, se);
         } else {
-            am.set(AlarmManager.RTC_WAKEUP, atTimeInMillis, sender);
+            Intent in = new Intent(context, AlarmReceiver.class);
+            Parcel out = Parcel.obtain();
+            alarm.writeToParcel(out, 0);
+            out.setDataPosition(0);
+            in.putExtra(ALARM_RAW_DATA, out.marshall());
+            PendingIntent se = PendingIntent.getBroadcast(context, 0, in, PendingIntent.FLAG_CANCEL_CURRENT);
         }
 
 //        AlarmManager.AlarmClockInfo nextAlarmClock = am.getNextAlarmClock();
@@ -519,10 +533,10 @@ public class Alarms {
         intent.setAction(ALARM_ALERT_ACTION);
         intent.setPackage(PACKAGE_NAME);
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        PendingIntent sender = PendingIntent.getBroadcast(
-                context, 0, intent,
-                PendingIntent.FLAG_CANCEL_CURRENT);
-        am.cancel(sender);
+        PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_NO_CREATE);
+        if (sender != null) {
+            am.cancel(sender);
+        }
         setStatusBarIcon(context, false);
         saveNextAlarm(context, "");
     }
